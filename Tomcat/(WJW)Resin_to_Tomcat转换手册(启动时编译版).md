@@ -8,10 +8,18 @@
 #### [x] 解压`tomcat_youyuan.tar.gz`文件到`/opt/app/`目录下:
 > tar zxvf tomcat_youyuan.tar.gz
 
+#### [x] 检查 `/opt/app/tomcat_youyuan/lib/`目录下是否有以下文件:
+```
+wjw-org.glassfish.jsp.api-2.2.2.v201112011158.jar
+wjw-ResinJndiDBPool.jar
+```
+
 #### [x] 检查`/opt/app/tomcat_youyuan/conf/`目录里是否有以下3个文件:
-> db_pool.properties  
-> logging.properties  
-> resin.xml  
+```
+db_pool.properties  
+logging.properties  
+resin.xml
+```
 
 #### [x] 编辑:`/opt/app/tomcat_youyuan/conf/server.xml`文件,添加:
 ```xml

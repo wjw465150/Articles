@@ -96,31 +96,27 @@ chmod +x /data/app/tomcat7/wrapper_home/sbin/wrapper-linux-x86-64
 ```
 
 ### [X] Tomcat配置
-* Java虚拟机的配置文件在: `/data/app/tomcat7/wrapper_home/conf/wrapper.conf`文件里,可修改的参数是:
+* 配置文件在: `/data/app/tomcat7/wrapper_home/conf/wrapper.conf`文件里,可修改的参数是:
 ```
-wrapper.java.additional.16=-Xms2g
-wrapper.java.additional.17=-Xmx8g
-wrapper.java.additional.18=-XX:MaxPermSize=512m
-wrapper.java.additional.19=-XX:+UseConcMarkSweepGC
-wrapper.java.additional.20=-XX:+CMSClassUnloadingEnabled
-wrapper.java.additional.21=-XX:+DoEscapeAnalysis
-wrapper.java.additional.22=-Dspring.profiles.active=prod
-```
+#->@wjw_add Environment Variable Definition
+set.default.JAVA_HOME=/usr/java/default
 
-* 修改Tomcat参数的的配置文件在: `/data/app/tomcat7/conf/server.xml`文件里,可修改的参数是:
-```
-     <Executor name="tomcatThreadPool" namePrefix="tomcatThreadPool-"
-                  maxThreads="1000" minSpareThreads="20" maxIdleTime="60000" />
+set.default.JVM_Xms=-Xms512m
+set.default.JVM_Xmx=-Xmx1g
+set.default.JVM_ReservedCodeCacheSize=-XX:ReservedCodeCacheSize=96m
+set.default.JVM_MaxPermSize=-XX:MaxPermSize=512m
 
+set.default.SPRING_profiles=-Dspring.profiles.active=production
 
-     <Connector executor="tomcatThreadPool"
-                port="8088" protocol="HTTP/1.1"
-                connectionTimeout="300000"
-                keepAliveTimeout="15000"
-                maxKeepAliveRequests="100"
-                redirectPort="8443"
-                maxHttpHeaderSize="8192" URIEncoding="UTF-8" enableLookups="false" acceptCount="200" disableUploadTimeout="true"/>
-```
+set.default.HTTP_Port=-DhttpPort=8080
+set.default.SSL_Port=-DsslPort=8443
+set.default.STOP_Port=-DstopPort=8005
+
+set.default.JMX_Port=5678
+set.default.JMX_User=tomcat
+set.default.JMX_Password=tomcat
+#<-@wjw_add Environment Variable Definition
+```  
 
 * tomcat的状态日志: `/data/app/tomcat7/logs/wrapper-tomcat7.log`
 * tomcat存取日志: `/data/app/tomcat7/logs/localhost_access_log.YYYY-MM-DD.txt`
@@ -138,46 +134,47 @@ Usage: /data/app/tomcat7/bin/tomcat [ console | start | stop | restart | status 
 
 ### [X] 附录:
 #####  [X] 开机启动tomcat
-  修改/etc/rc.d/rc.local, 添加:```su www -lc '/data/app/tomcat7/bin/tomcat start'```
+  修改/etc/rc.d/rc.local, 添加:```su www -c '/data/app/tomcat7/bin/tomcat start'```
 
 ##### [X] 安装APR
 1.如果没有安装SSL,就先安装SSL,首选用:`yum -y install openssl openssl-devel`
-或者,用源代码安装:解压缩openssl-1.0.1e.tar.gz
+或者,用源代码安装:解压缩`openssl-1.0.1e.tar.gz`  
 ```
 tar -zxvf openssl-1.0.1e.tar.gz
 cd ./openssl-1.0.1e
 ./configure -fPIC enable-shared
 make
 make install
-```
+```  
+SSL会生成在:`/usr/local/ssl/`目录下
 
-APR会生成在:`/usr/local/ssl/`目录下
-
-2.解压缩apr-1.4.8.tar.gz
+2.解压缩`apr-1.5.1.tar.gz`  
 ```
-tar -zxvf apr-1.4.8.tar.gz
-cd ./apr-1.4.8
+tar -zxvf apr-1.5.1.tar.gz
+cd ./apr-1.5.1 
 ./configure
 make
 make install
-```
-
+```  
 APR会生成在:`/usr/local/apr/`目录下
 
-3.安装apr-util-1.5.2.tar.gz
+3.安装`apr-util-1.5.4.tar.gz`  
 ```
-tar -zxvf apr-util-1.5.2.tar.gz
-cd ./apr-util-1.5.2
+tar -zxvf apr-util-1.5.4.tar.gz
+cd ./apr-util-1.5.4
 ./configure --with-apr=/usr/local/apr
 make
 make install
-```
+```  
 
-4.解压缩tomcat-native-1.1.29-src.tar.gz
+4.解压缩`tomcat-native-1.1.32-src.tar.gz`  
 ```
-tar -zxvf ./tomcat-native-1.1.29-src.tar.gz
-cd ./tomcat-native-1.1.29-src/jni/native/
+tar -zxvf ./tomcat-native-1.1.32-src.tar.gz
+cd ./tomcat-native-1.1.32-src/jni/native/
+export JAVA_HOME=/usr/java/default
 ./configure --with-apr=/usr/local/apr --with-ssl=yes
+make uninstall
+make clean
 make
 make install
 ```
