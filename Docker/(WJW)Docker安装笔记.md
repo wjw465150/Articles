@@ -25,7 +25,7 @@ cp ./hop5.repo /etc/yum.repos.d
 #### [X] 四、安装Docker
 #### yum安装
 ##### [X] 升级带aufs模块的3.10内核(可选)
-```
+```bash
 yum install kernel-ml-aufs kernel-ml-aufs-devel
 ```
 > 1. 修改grub的主配置文件/etc/grub.conf，设置default=0，表示第一个title下的内容为默认启动的kernel（一般新安装的内核在第一个位置）。
@@ -43,7 +43,7 @@ yum install kernel-ml-aufs kernel-ml-aufs-devel
 >>   
 
 ##### [X] 安装docker
-```
+```bash
 yum install redhat-lsb
 
 yum install iptables
@@ -100,7 +100,7 @@ Downloading Packages:
 
 #### rpm手工安装:  
 先执行
-```
+```bash
 rpm --nodeps -ev $(rpm -qa | grep -i 'device-mapper-libs-')
 rpm --nodeps -ev $(rpm -qa | grep -i 'device-mapper-')
 rpm --nodeps -ev $(rpm -qa | grep -i 'device-mapper-event-libs-')
@@ -110,7 +110,7 @@ rpm -ivh ./device-mapper-event-1.02.90-2.el6.x86_64.rpm ./device-mapper-event-li
 ```
 
 再执行
-```
+```bash
 rpm -ivh ./lxc-libs-1.0.6-1.el6.x86_64.rpm
 rpm -ivh ./lua-alt-getopt-0.7.0-1.el6.noarch.rpm
 rpm -ivh ./lua-filesystem-1.4.2-1.el6.x86_64.rpm
@@ -153,7 +153,7 @@ service docker start
 
 #### [X] 八 、进入 Docker 容器:
 创建`vi /bin/docker-enter.sh`
-```
+```bash
 #!/bin/sh
 
 if [ -e $(dirname "$0")/nsenter ]; then
@@ -189,17 +189,17 @@ else
   fi
 fi
 ```
-加上可执行`chmod +x /bin/docker-enter.sh`
-运行`docker-enter.sh <container id>`,这样就进入到指定的容器中!
+加上可执行`chmod +x /bin/docker-enter.sh`  
+运行`docker-enter.sh <container id>`,这样就进入到指定的容器中!  
 
 #### [X] 附录:低版本的Redhat(6.3)可能要手动挂载cgroup
   我们首选禁用cgroup对应服务cgconfig.
-```
+```bash
   service cgconfig stop # 关闭服务 
   chkconfig cgconfig off # 取消开机启动
 ```
   然后挂载cgroup,可以命令行挂载
-```
+```bash
   mount -t cgroup none /cgroup  #仅本次有效
 ```
   或者修改配置文件,编辑`/etc/fstab`,加入

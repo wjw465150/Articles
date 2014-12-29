@@ -144,7 +144,7 @@ Data Base Updated
 
 ## 安装,配置,运行nginx
 ### (1) 添加组和用户:
-```
+```bash
 groupadd www -g 58
 useradd -u 58 -g www www
 ```
@@ -434,8 +434,36 @@ REPOSITORY                                   TAG                 IMAGE ID       
 docker.yy.com/centos                         centos6             25c5298b1a36        8 days ago          215.8 MB
 ```
 
-
 - - -
+
+# Docker的Web管理界面Shipyard
+## [0] 编辑`/etc/sysconfig/docker`文件
+在`DOCKER_OPTS`里添加`-H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock`,例如:		
+```
+DOCKER_OPTS="-H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock --insecure-registry docker.yy.com --tlsverify --tlscacert /etc/pki/CA/cacert.pem --registry-mirror=http://d194d5cb.m.daocloud.io"
+```
+
+## [1] Start an data volume instance of RethinkDB:
+```
+docker run -it -d --name shipyard-rethinkdb-data --entrypoint /bin/bash shipyard/rethinkdb -l
+```
+
+## [2] Start RethinkDB with using the data volume container:
+```
+docker run -it -P -d --name shipyard-rethinkdb --volumes-from shipyard-rethinkdb-data shipyard/rethinkdb
+```
+> If your server is directly accessible on Internet,   
+> please note your RethinkDB installation may publicly listen to   
+> ports `49153` (local instance), `49154` (cluster) and `49155` (web interface) and so accessible to all.    
+
+
+## [3] Start the Shipyard controller:
+```
+docker run -it -p 8080:8080 -d --name shipyard --link shipyard-rethinkdb:rethinkdb shipyard/shipyard
+```
+> Shipyard will create a default user account with the username`admin` and the password`shipyard`.  
+> You should then be able to open a browser to`http://<your-host-ip>:8080`and see the Shipyard login.  
+
 # 附录:  
 ## (1) 弊端:  
 > server端可以login到官方的Docker Hub,可以pull,push官方和私有仓库!  

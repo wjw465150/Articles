@@ -1,14 +1,15 @@
 ## (WJW)Redis高可用安装笔记
 
 ### [x] 安装环境介绍:
-```
-Master: T1
-Slave: T2
-VIP: 192.168.68.45
-```
+>  
+>  Master: T1  
+>  Slave: T2  
+>  VIP: 192.168.68.45  
+
+*************************************************************************************************
 
 ### [x] 安装Redis(Master,Slave)
-```
+```bash
 vi /etc/sysctl.conf
 添加一行: `vm.overcommit_memory=1`
 
@@ -22,7 +23,7 @@ make PREFIX=/opt/redis install
 ```
 
 #### [x] Redis启动脚本(Master,Slave):/opt/redis/bin/startRedis.sh
-```
+```bash
 #!/bin/bash
 
 basedir=`dirname $0`
@@ -33,7 +34,7 @@ nohup ./redis-server ./redis.conf > /dev/null 2>&1 &
 ```
 
 #### [x] Redis停止脚本(Master,Slave):/opt/redis/bin/StopRedis.sh
-```
+```bash
 #!/bin/sh
 
 basedir=`dirname $0`
@@ -71,7 +72,7 @@ appendfsync everysec
 ```
 
 ### [x] 安装Keepalived(Master,Slave):
-```
+```bash
 #wget http://www.keepalived.org/software/keepalived-1.2.13.tar.gz
 tar zxvf keepalived-1.2.13.tar.gz
 cd ./keepalived-1.2.13
@@ -193,7 +194,7 @@ vrrp_instance VI_1 {
 #### [x] 在Master和Slave上创建监控Redis的脚本:
 `mkdir /etc/keepalived/scripts/`
 `vi /etc/keepalived/scripts/redis_check.sh`
-```
+```bash
 #!/bin/bash
 
 C_DATE=`date +"[%Y-%m-%d %H:%M:%S]"`
@@ -210,7 +211,7 @@ fi
 
 #### [x] 在Master与Slave创建如下脚本`notify_fault`和`notify_stop`：
 `vim /etc/keepalived/scripts/redis_fault.sh`
-```
+```bash
 #!/bin/bash
  
 C_DATE=`date +"[%Y-%m-%d %H:%M:%S]"`
@@ -220,7 +221,7 @@ echo "${C_DATE} [fault]" >> $LOGFILE
 ```
 
 `vim /etc/keepalived/scripts/redis_stop.sh`
-```
+```bash
 #!/bin/bash
  
 C_DATE=`date +"[%Y-%m-%d %H:%M:%S]"`
@@ -231,7 +232,7 @@ echo "${C_DATE} [stop]" >> $LOGFILE
 
 #### [x] 在Master上创建`notity_master`与`notify_backup`脚本:
 `vim /etc/keepalived/scripts/redis_master.sh`
-```
+```bash
 #!/bin/bash
  
 C_DATE=`date +"[%Y-%m-%d %H:%M:%S]"`
@@ -251,7 +252,7 @@ $REDISCLI SLAVEOF NO ONE >> $LOGFILE 2>&1
 ```
 
 `vim /etc/keepalived/scripts/redis_backup.sh`
-```
+```bash
 #!/bin/bash
  
 C_DATE=`date +"[%Y-%m-%d %H:%M:%S]"`
@@ -270,7 +271,7 @@ $REDISCLI SLAVEOF T2 6379 >> $LOGFILE  2>&1
 
 #### [x] 在Slave上创建`notity_master`与`notify_backup`脚本:
 `vim /etc/keepalived/scripts/redis_master.sh`
-```
+```bash
 #!/bin/bash
  
 C_DATE=`date +"[%Y-%m-%d %H:%M:%S]"`
@@ -290,7 +291,7 @@ $REDISCLI SLAVEOF NO ONE >> $LOGFILE 2>&1
 ```
 
 `vim /etc/keepalived/scripts/redis_backup.sh`
-```
+```bash
 #!/bin/bash
  
 C_DATE=`date +"[%Y-%m-%d %H:%M:%S]"`

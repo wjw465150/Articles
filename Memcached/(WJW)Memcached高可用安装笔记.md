@@ -1,23 +1,24 @@
 ## (WJW)Memcached高可用安装笔记
 
 ### [x] 安装环境介绍:
-```
-Master: T1
-Slave: T2
-VIP: 192.168.68.46
-```
-```
-memcached-1.2.8-repcached-2.2.1,是memcached1.2.x的扩展，目的是实现memcached的数据复制属性，来实现memcached的数据备份。该扩展可以使memcached通过异步数据复制实现memcached的数据复制/备份功能，同时支持Memcached的所有操作指令。
-它是一个单master单slave的方案,但它的 master/slave都是可读写的,而且可以相互同步,依赖libevent-1.4.X库,不能使用libevent-2.X库
-但是要注意安装memcached后, 如果再安装repcached的完整安装包,会有冲突.
-如果已经安装了memcached,打算换成repcached,卸载memcached,然后安装完整repcached包
-如果安装的系统是64位的,可以增加选项: --enable-64bit
-注意: memcached-repcached只支持文本协议!
-```
+>  
+>  Master: T1  
+>  Slave: T2  
+>  VIP: 192.168.68.46  
+   
+********************************************
+
+>  memcached-1.2.8-repcached-2.2.1,是memcached1.2.x的扩展，目的是实现memcached的数据复制属性，来实现memcached的数据备份。该扩展可以使memcached通过异步数据复制实现memcached的数据复制/备份功能，同时支持Memcached的所有操作指令。  
+>  它是一个单master单slave的方案,但它的 master/slave都是可读写的,而且可以相互同步,依赖libevent-1.4.X库,不能使用libevent-2.X库  
+>  但是要注意安装memcached后, 如果再安装repcached的完整安装包,会有冲突.  
+>  如果已经安装了memcached,打算换成repcached,卸载memcached,然后安装完整repcached包  
+>  如果安装的系统是64位的,可以增加选项: --enable-64bit  
+>  注意: memcached-repcached只支持文本协议!  
+
 
 ### [x] 安装Memcached的repcached版本(Master,Slave)
 #### 1.安装libevent(http://www.monkey.org/~provos/libevent-1.4.13-stable.tar.gz)
-```
+```bash
 tar -zxvf libevent-1.4.13-stable.tar.gz
 cd libevent-1.4.13-stable
 ./configure --prefix=/usr/local
@@ -29,7 +30,7 @@ cd ..
 ```
 
 #### 2.安装memcached-repcached(http://downloads.sourceforge.net/repcached/memcached-1.2.8-repcached-2.2.1.tar.gz)
-```
+```bash
 tar -zxvf memcached-1.2.8-repcached-2.2.1.tar.gz
 cd memcached-1.2.8-repcached-2.2.1
 ./configure --with-libevent=/usr/local/lib/ --enable-replication --enable-64bit
@@ -125,7 +126,7 @@ exit 0
 ```
 
 变成service服务脚本: 
-```
+```bash
 chmod +x /etc/rc.d/init.d/memcached
 chkconfig --add memcached
 #chkconfig --level 35 memcached on
@@ -200,7 +201,7 @@ chkconfig --add memcached
 ```
 
 ### [x] 安装Keepalived(Master,Slave):
-```
+```bash
 #wget http://www.keepalived.org/software/keepalived-1.2.13.tar.gz
 tar zxvf keepalived-1.2.13.tar.gz
 cd ./keepalived-1.2.13
