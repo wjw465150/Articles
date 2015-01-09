@@ -16,15 +16,29 @@
 + JDK
 >  
 建议安装Sun的JDK1.7版本!
+安装完毕并配置java环境变量,在/etc/profile末尾添加如下代码:  
+export JAVA_HOME=/usr/java/default  
+export PATH=$JAVA_HOME/bin:$PATH  
+保存退出即可,然后执行`source /etc/profile`生效.在命令行执行java -version 如下代表JAVA安装成功.  
 
 + ssh
 >  
-需要配置各个节点的免密码登录!
+需要配置各个节点的免密码登录!   
+首先在自己机器上使用`ssh-keygen -t rsa`  
+会要求输入密码(必须为空),回车几次,然后会在HOME目录下生成.ssh文件夹,  
+里面有私钥和公钥,公钥为id_rsa.pub,(现在你需要将你的公钥拷贝到服务器上,如果你的系统有ssh-copy-id命令,拷贝会很简单:$ ssh-copy-id 用户名@服务器名)  
+否则,你需要手动将你的私钥拷贝的服务器上的~/.ssh/authorized_keys文件中!  
 
 + NTP
 >  
 集群的时钟要保证基本的一致.稍有不一致是可以容忍的,但是很大的不一致会 造成奇怪的行为. 运行 NTP 或者其他什么东西来同步你的时间.    
-如果你查询的时候或者是遇到奇怪的故障,可以检查一下系统时间是否正确!
+如果你查询的时候或者是遇到奇怪的故障,可以检查一下系统时间是否正确!  
+```bash
+echo "server 192.168.0.2" >> /etc/ntp.conf  
+chkconfig ntpd on  
+service ntpd restart  
+ntpq -p  
+```
 
 + ulimit和nproc
 >  
@@ -60,54 +74,69 @@ GlusterFS基于可堆叠的用户空间设计,可为各种不同的数据负载提供优异的性能.
 192.168.1.87 hbase87
 ```
 
-## [X]  拷贝`hbase-0.98.8-hadoop2-bin.tar.gz`到各个节点的`/opt`目录下,然后执行:  
+## [X]  拷贝`hbase-0.98.8-hadoop2-bin.tar.gz`到各个hbase84的`/opt`目录下,然后执行:  
 ```bash
 cd /opt
 tar zxvf ./hbase-0.98.8-hadoop2-bin.tar.gz
+mv hbase-0.98.8-hadoop2  /opt/hbase
 ```
 
 ## [X]  源码编译安装Hadoop的native库:  
 ```
 #YUM安装依赖库
-yum install autoconfautomake libtool cmake
+yum install autoconfautomake libtool cmake zlib-devel
 yum install ncurses-devel
 yum install openssl-devel
 yum install gcc*
 
-#Download and install protobuf
-wget http://protobuf.googlecode.com/files/protobuf-2.5.0.tar.gz /tmp
-tar -xvf protobuf-2.5.0.tar.gz
-cd /tmp/protobuf-2.5.0
+下载并安装配置:protobuf
+cd /tmp
+wget http://protobuf.googlecode.com/files/protobuf-2.5.0.tar.gz
+tar -zxvf protobuf-2.5.0.tar.gz
+cd protobuf-2.5.0
 ./configure
 make
 make install 
 ldconfig
+rm -rf /tmp/protobuf-2.5.0/
 
-#Install cmake
-yum install cmake
+#下载并配置:findbugs
+http://sourceforge.net/projects/findbugs/files/findbugs/2.0.2/findbugs-2.0.2.tar.gz/download
+解压:tar -zxvf ./findbugs-2.0.2.tar.gz
+配置环境变量FINDBUGS_HOME: export FINDBUGS_HOME=/path to your extract directory  #例如: export FINDBUGS_HOME=/opt/findbugs-2.0.2
 
 #Build native libraries using maven
-mvn package -Pdist,native -DskipTests -Dtar
+编辑`hadoop-common-project/hadoop-auth/pom.xml`文件,添加上
+    <dependency>
+       <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jetty-util</artifactId>
+      <scope>test</scope>
+    </dependency>
+编辑`hadoop-common-project/hadoop-auth/pom.xml`文件,在<artifactId>maven-site-plugin</artifactId>后添加一行:<version>3.3</version>
+编辑`pom.xml`文件,把<artifactId>maven-site-plugin</artifactId>后面的:<version>3.0</version>改成:<version>3.3</version>
+
+mvn package -Pdist,native,docs -DskipTests -Dtar
+生成好的文件是:/opt/hadoop-2.2.0-src/hadoop-dist/target/hadoop-2.2.0.tar.gz
 ```
-把hadoop2.2.0里的`lib/native`目录下的文件复制到hbase的`lib/native`目录下,然后执行:  
+把hadoop-2.2.0.tar.gz里的`lib/native`目录下的文件复制到hbase的`lib/native`目录下,然后执行:  
 >  
-cd /opt/hbase-0.98.8-hadoop2/lib/native  
+cd /opt/hbase/lib/native  
 ln -fs libhadoop.so.1.0.0 libhadoop.so  
 ln -fs libhdfs.so.0.0.0 libhdfs.so  
 
 
-## [X]  修改`conf/hbase-env.sh`文件,在文件最后添加:
+## [X]  修改`/opt/hbase/conf/hbase-env.sh`文件,在文件最后添加:
 ```
 export JAVA_HOME=/usr/java/default
 export PATH=$JAVA_HOME/bin:$PATH
 
-export HBASE_PID_DIR=/var/hadoop/pids
+export HBASE_PID_DIR=/var/hbase/pids
 export JAVA_LIBRARY_PATH=${HBASE_HOME}/lib/native
 export HBASE_MANAGES_ZK=false
 export HBASE_HEAPSIZE=3000
 ```
 
-## [X]  修改`conf/hbase-site.xml`文件,改成:
+## [X]  修改`/opt/hbase/conf/hbase-site.xml`文件,改成:
 ```xml
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
@@ -149,7 +178,7 @@ export HBASE_HEAPSIZE=3000
 </configuration>
 ```
 
-## [X]  修改`conf/regionservers文件`,配置HBase集群中的从结点Region Server,如下所示:
+## [X]  修改`/opt/hbase/conf/regionservers文件`,配置HBase集群中的从结点Region Server,如下所示:
 ``` 
 hbase85
 hbase86
@@ -158,20 +187,32 @@ hbase87
 
 ## [X]  为脚本文件添加可执行权限
 ```bash
-chmod -R +x /opt/hbase-0.98.8-hadoop2/bin/*
-chmod -R +x /opt/hbase-0.98.8-hadoop2/conf/*.sh
+chmod -R +x /opt/hbase/bin/*
+chmod -R +x /opt/hbase/conf/*.sh
 ```
 
 ## [X]  启动hbase集群  
-在master节点上执行:  
+
+### [1] 把配置好的hbase复制到其他节点:    
+执行如下操作即可
 ```bash
-/opt/hbase-0.98.8-hadoop2/bin/start-hbase.sh
+ssh hbase84
+ssh hbase85
+ssh hbase86
+ssh hbase87
+scp -r /opt/hbase/ root@hbase85:/opt/
+scp -r /opt/hbase/ root@hbase86:/opt/
+scp -r /opt/hbase/ root@hbase87:/opt/
+```
+### [2] 在hbase84节点上执行:  
+```bash
+/opt/hbase/bin/start-hbase.sh
 ```
 
 ## [X]  停止hbase集群
-在master节点上执行:  
+在hbase84节点上执行:  
 ```bash
-/opt/hbase-0.98.8-hadoop2/bin/stop-hbase.sh
+/opt/hbase/bin/stop-hbase.sh
 ```
 
 # [X] 附录:
